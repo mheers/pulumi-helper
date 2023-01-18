@@ -15,7 +15,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build
 
 FROM alpine
 
-COPY --from=builder /workspace/pulumi-helper /usr/bin/ph
+COPY --from=builder /workspace/pulumi-helper /usr/bin/pulumi-helper
 
 # Run the binary.
-ENTRYPOINT ["/usr/bin/ph"]
+ENTRYPOINT ["/usr/bin/pulumi-helper"]
