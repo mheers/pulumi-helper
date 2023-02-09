@@ -8,7 +8,6 @@ import (
 	"github.com/pulumi/pulumi/pkg/v3/secrets"
 	"github.com/pulumi/pulumi/pkg/v3/secrets/passphrase"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/sirupsen/logrus"
 )
 
 func encryptionSalt(ctx *pulumi.Context) (string, error) {
@@ -55,26 +54,26 @@ func initCrypter(salt string) error {
 	return nil
 }
 
-func Encrypt(value string) string {
+func Encrypt(value string) (string, error) {
 	enc, err := secretsManager.Encrypter()
 	if err != nil {
-		logrus.Fatal(err)
+		return "", err
 	}
 	encrypted, err := enc.EncryptValue(context.Background(), value)
 	if err != nil {
-		logrus.Fatal(err)
+		return "", err
 	}
-	return encrypted
+	return encrypted, nil
 }
 
-func Decrypt(value string) string {
+func Decrypt(value string) (string, error) {
 	dec, err := secretsManager.Decrypter()
 	if err != nil {
-		logrus.Fatal(err)
+		return "", err
 	}
 	decrypted, err := dec.DecryptValue(context.Background(), value)
 	if err != nil {
-		logrus.Fatal(err)
+		return "", err
 	}
-	return decrypted
+	return decrypted, nil
 }
