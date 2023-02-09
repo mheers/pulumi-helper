@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/mheers/k3i/helpers"
+	"github.com/mheers/pulumi-helper/helpers"
 	"github.com/spf13/cobra"
 )
 
