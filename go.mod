@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be
 	github.com/evanphx/json-patch v5.6.0+incompatible
+	github.com/ghodss/yaml v1.0.0
 	github.com/gocarina/gocsv v0.0.0-20221216233619-1fea7ae8d380
 	github.com/golang/protobuf v1.5.2
 	github.com/jedib0t/go-pretty/v6 v6.4.4
