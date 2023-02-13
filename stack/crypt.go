@@ -25,6 +25,13 @@ func encryptionSaltByStackName(stackName string) (string, error) {
 
 var secretsManager secrets.Manager
 
+func InitCrypterWithSaltAndPassphrase(salt, passphrase string) error {
+	if err := os.Setenv("PULUMI_CONFIG_PASSPHRASE", passphrase); err != nil {
+		return err
+	}
+	return initCrypter(salt)
+}
+
 func InitCrypter(ctx *pulumi.Context) error {
 	salt, err := encryptionSalt(ctx)
 	if err != nil {
@@ -42,6 +49,11 @@ func InitCrypterForProject(name string) error {
 }
 
 func initCrypter(salt string) error {
+	// only initialize once
+	if secretsManager != nil {
+		return nil
+	}
+
 	pp := os.Getenv("PULUMI_CONFIG_PASSPHRASE")
 	if pp == "" {
 		return errors.New("PULUMI_CONFIG_PASSPHRASE is not set")
@@ -55,6 +67,10 @@ func initCrypter(salt string) error {
 }
 
 func Encrypt(value string) (string, error) {
+	if secretsManager == nil {
+		return "", errors.New("secretsManager is not initialized")
+	}
+
 	enc, err := secretsManager.Encrypter()
 	if err != nil {
 		return "", err
@@ -67,6 +83,10 @@ func Encrypt(value string) (string, error) {
 }
 
 func Decrypt(value string) (string, error) {
+	if secretsManager == nil {
+		return "", errors.New("secretsManager is not initialized")
+	}
+
 	dec, err := secretsManager.Decrypter()
 	if err != nil {
 		return "", err
