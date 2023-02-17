@@ -1,7 +1,6 @@
 all: build
 
-build:
-	docker build -t mheers/pulumi-helper:latest .
+build: docker
 
-push:
-	docker push mheers/pulumi-helper:latest
+docker: ##  Builds the application for amd64 and arm64
+	docker buildx build --platform linux/amd64,linux/arm64 -t mheers/pulumi-helper:latest --push .
