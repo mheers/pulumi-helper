@@ -36,12 +36,12 @@ type Stack struct {
 func StackName() (string, error) {
 	project, err := ProjectName()
 	if err != nil {
-		return "", err
+		return "", errors.Join(err, errors.New("could not get stack name"))
 	}
 
 	spaces, err := workspace.GetWorkspaces()
 	if err != nil {
-		return "", err
+		return "", errors.Join(err, errors.New("could not get stack name"))
 	}
 
 	space, ok := spaces[project]
@@ -210,7 +210,7 @@ func Project() (*PulumiYaml, error) {
 func ProjectName() (string, error) {
 	p, err := Project()
 	if err != nil {
-		return "", err
+		return "", errors.Join(err, errors.New("could not read project name"))
 	}
 
 	return p.Name, nil
