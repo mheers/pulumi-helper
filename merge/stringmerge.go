@@ -62,6 +62,9 @@ func values(sm pulumi.MapArray, key string) []string {
 	sm.ToMapArrayOutput().ApplyT(func(m interface{}) interface{} {
 		mi := m.([]map[string]interface{})
 		for _, mx := range mi {
+			if mx["key"] == nil || mx["values"] == nil {
+				continue
+			}
 			currentKey := *mx["key"].(*string)
 			currentHostNames := mx["values"].([]string)
 			if currentKey == key {
