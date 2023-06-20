@@ -35,7 +35,11 @@ func (sma StringMergeArray) Merge() StringMergeArray {
 	sm.ToMapArrayOutput().ApplyT(func(m interface{}) interface{} {
 		mi := m.([]map[string]interface{})
 		for _, mx := range mi {
-			key := *mx["key"].(*string)
+			kk := mx["key"].(*string)
+			if kk == nil {
+				continue
+			}
+			key := *kk
 			if _, handled := handledKeys[key]; handled {
 				continue
 			}
