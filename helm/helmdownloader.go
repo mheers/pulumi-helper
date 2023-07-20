@@ -7,7 +7,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/pulumi/pulumi-kubernetes/provider/v3/pkg/provider"
+	"github.com/pulumi/pulumi-kubernetes/provider/v4/pkg/provider"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/registry"
