@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 	"os"
 	"os/user"
@@ -31,7 +30,6 @@ import (
 	"sync"
 	"time"
 
-	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/golang/protobuf/ptypes/empty"
 	pbempty "github.com/golang/protobuf/ptypes/empty"
 	structpb "github.com/golang/protobuf/ptypes/struct"
@@ -211,13 +209,6 @@ func (k *KubeProvider) getResources() (k8sopenapi.Resources, error) {
 	}
 	k.resources = rs
 	return k.resources, nil
-}
-
-func (k *KubeProvider) invalidateResources() {
-	k.resourcesMutex.Lock()
-	defer k.resourcesMutex.Unlock()
-
-	k.resources = nil
 }
 
 // Call dynamically executes a method in the provider associated with a component resource.
@@ -1541,27 +1532,6 @@ func (k *KubeProvider) label() string {
 	return fmt.Sprintf("Provider[%s]", k.name)
 }
 
-func (k *KubeProvider) gvkFromUnstructured(input *unstructured.Unstructured) schema.GroupVersionKind {
-	var group, version, kind string
-
-	kind = input.GetKind()
-	gv := strings.Split(input.GetAPIVersion(), "/")
-	if len(gv) == 1 {
-		version = input.GetAPIVersion()
-	} else {
-		group, version = gv[0], gv[1]
-	}
-	if group == "core" {
-		group = ""
-	}
-
-	return schema.GroupVersionKind{
-		Group:   group,
-		Version: version,
-		Kind:    kind,
-	}
-}
-
 func (k *KubeProvider) gvkFromURN(urn resource.URN) (schema.GroupVersionKind, error) {
 	if string(urn.Type().Package()) != k.providerPackage {
 		return schema.GroupVersionKind{}, fmt.Errorf("unrecognized resource type: %q for this provider",
@@ -1585,45 +1555,6 @@ func (k *KubeProvider) gvkFromURN(urn resource.URN) (schema.GroupVersionKind, er
 		Version: version,
 		Kind:    kind,
 	}, nil
-}
-
-func (k *KubeProvider) readLiveObject(obj *unstructured.Unstructured) (*unstructured.Unstructured, error) {
-	rc, err := k.clientSet.ResourceClientForObject(obj)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get the "live" version of the last submitted object. This is necessary because the server may
-	// have populated some fields automatically, updated status fields, and so on.
-	return rc.Get(k.canceler.context, obj.GetName(), metav1.GetOptions{})
-}
-
-// inputPatch calculates a patch on the client-side by comparing old inputs to the current inputs.
-func (k *KubeProvider) inputPatch(
-	oldInputs, newInputs *unstructured.Unstructured,
-) ([]byte, error) {
-	oldInputsJSON, err := oldInputs.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	newInputsJSON, err := newInputs.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-
-	return jsonpatch.CreateMergePatch(oldInputsJSON, newInputsJSON)
-}
-
-func (k *KubeProvider) isDryRunDisabledError(err error) bool {
-	se, isStatusError := err.(*apierrors.StatusError)
-	if !isStatusError {
-		return false
-	}
-
-	return se.Status().Code == http.StatusBadRequest &&
-		(se.Status().Message == "the dryRun alpha feature is disabled" ||
-			se.Status().Message == "the dryRun beta feature is disabled" ||
-			strings.Contains(se.Status().Message, "does not support dry run"))
 }
 
 // fieldManagerName returns the name to use for the Server-Side Apply fieldManager. The values are looked up with the
