@@ -5,9 +5,11 @@ package provider
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/deepcopy"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/tools/clientcmd"
@@ -19,8 +21,8 @@ func hasComputedValue(obj *unstructured.Unstructured) bool {
 		return false
 	}
 
-	objects := []map[string]interface{}{obj.Object}
-	var curr map[string]interface{}
+	objects := []map[string]any{obj.Object}
+	var curr map[string]any
 
 	for {
 		if len(objects) == 0 {
@@ -31,13 +33,13 @@ func hasComputedValue(obj *unstructured.Unstructured) bool {
 			switch field := v.(type) {
 			case resource.Computed:
 				return true
-			case map[string]interface{}:
+			case map[string]any:
 				objects = append(objects, field)
-			case []interface{}:
+			case []any:
 				for _, v := range field {
-					objects = append(objects, map[string]interface{}{"": v})
+					objects = append(objects, map[string]any{"": v})
 				}
-			case []map[string]interface{}:
+			case []map[string]any:
 				objects = append(objects, field...)
 			}
 		}
@@ -132,4 +134,84 @@ func getActiveClusterFromConfig(config *clientapi.Config, overrides resource.Pro
 	}
 
 	return activeCluster
+}
+
+// pruneMap builds a pruned map by recursively copying elements from the source map that have a matching key in the
+// target map. This is useful as a preprocessing step for live resource state before comparing it to program inputs.
+func pruneMap(source, target map[string]any) map[string]any {
+	result := make(map[string]any)
+
+	for key, value := range source {
+		valueT := reflect.TypeOf(value)
+
+		if targetValue, ok := target[key]; ok {
+			targetValueT := reflect.TypeOf(targetValue)
+
+			if valueT == nil || targetValueT == nil || valueT != targetValueT {
+				result[key] = value
+				continue
+			}
+
+			switch valueT.Kind() {
+			case reflect.Map:
+				nestedResult := pruneMap(value.(map[string]any), targetValue.(map[string]any))
+				result[key] = nestedResult
+			case reflect.Slice:
+				nestedResult := pruneSlice(value.([]any), targetValue.([]any))
+				result[key] = nestedResult
+			default:
+				result[key] = value
+			}
+		}
+	}
+
+	return result
+}
+
+// pruneSlice builds a pruned slice by copying elements from the source slice that have a matching element in the
+// target slice.
+func pruneSlice(source, target []any) []any {
+	result := make([]any, 0, len(target))
+
+	// If either slice is empty, return an empty slice.
+	if len(source) == 0 || len(target) == 0 {
+		return result
+	}
+
+	valueT := reflect.TypeOf(source[0])
+	targetValueT := reflect.TypeOf(target[0])
+
+	// If slices are of different types, return a copy of the source.
+	if valueT != targetValueT {
+		return deepcopy.Copy(source).([]any)
+	}
+
+	for i, targetValue := range target {
+		if i+1 > len(source) {
+			break
+		}
+		value := source[i]
+
+		if value == nil || targetValue == nil {
+			result = append(result, value)
+			continue
+		}
+
+		switch valueT.Kind() {
+		case reflect.Map:
+			nestedResult := pruneMap(value.(map[string]any), targetValue.(map[string]any))
+			if len(nestedResult) > 0 {
+				result = append(result, nestedResult)
+			}
+		case reflect.Slice:
+			nestedResult := pruneSlice(value.([]any), targetValue.([]any))
+			if len(nestedResult) > 0 {
+				result = append(result, nestedResult)
+			}
+		default:
+			result = append(result, value)
+		}
+	}
+
+	return result
 }

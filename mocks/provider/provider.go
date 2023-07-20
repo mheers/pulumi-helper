@@ -55,6 +55,7 @@ import (
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/helmpath"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -152,7 +153,7 @@ type KubeProvider struct {
 
 var _ pulumirpc.ResourceProviderServer = (*KubeProvider)(nil)
 
-func makeKubeProvider(
+func MakeKubeProvider(
 	host *provider.HostClient, name, version string, pulumiSchema []byte,
 ) (pulumirpc.ResourceProviderServer, error) {
 	return &KubeProvider{
@@ -166,6 +167,30 @@ func makeKubeProvider(
 		suppressDeprecationWarnings: false,
 		deleteUnreachable:           false,
 	}, nil
+}
+
+func (k *KubeProvider) defaultKubeVersion() *chartutil.KubeVersion {
+
+	version := k.version // e.g. v1.25
+	major := strings.Split(version, ".")[0]
+	major = strings.ReplaceAll(major, "v", "")
+	minor := strings.Split(version, ".")[1]
+
+	defaultKubeVersion := &chartutil.KubeVersion{
+		Version: k.version,
+		Major:   major,
+		Minor:   minor,
+	}
+
+	return defaultKubeVersion
+}
+
+func (k *KubeProvider) HelmTemplate(opts HelmChartOpts) (string, error) {
+	return helmTemplate(opts, k.clientSet, k.defaultKubeVersion())
+}
+
+func (k *KubeProvider) DecodeYaml(text string, defaultNamespace string) ([]interface{}, error) {
+	return decodeYaml(text, defaultNamespace, k.clientSet)
 }
 
 func (k *KubeProvider) getResources() (k8sopenapi.Resources, error) {
@@ -757,7 +782,7 @@ func (k *KubeProvider) Invoke(ctx context.Context,
 			return nil, pkgerrors.Wrap(err, "failed to unmarshal 'jsonOpts'")
 		}
 
-		text, err := helmTemplate(opts, k.clientSet)
+		text, err := helmTemplate(opts, k.clientSet, k.defaultKubeVersion())
 		if err != nil {
 			return nil, pkgerrors.Wrap(err, "failed to generate YAML for specified Helm chart")
 		}
