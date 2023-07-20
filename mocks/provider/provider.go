@@ -111,7 +111,7 @@ type kubeOpts struct {
 	rejectUnknownResources bool
 }
 
-type kubeProvider struct {
+type KubeProvider struct {
 	pulumirpc.UnimplementedResourceProviderServer
 
 	host             *provider.HostClient
@@ -153,12 +153,12 @@ type kubeProvider struct {
 	resourcesMutex sync.RWMutex
 }
 
-var _ pulumirpc.ResourceProviderServer = (*kubeProvider)(nil)
+var _ pulumirpc.ResourceProviderServer = (*KubeProvider)(nil)
 
 func makeKubeProvider(
 	host *provider.HostClient, name, version string, pulumiSchema []byte,
 ) (pulumirpc.ResourceProviderServer, error) {
-	return &kubeProvider{
+	return &KubeProvider{
 		host:                        host,
 		canceler:                    makeCancellationContext(),
 		name:                        name,
@@ -171,7 +171,7 @@ func makeKubeProvider(
 	}, nil
 }
 
-func (k *kubeProvider) getResources() (k8sopenapi.Resources, error) {
+func (k *KubeProvider) getResources() (k8sopenapi.Resources, error) {
 	k.resourcesMutex.RLock()
 	rs := k.resources
 	k.resourcesMutex.RUnlock()
@@ -191,7 +191,7 @@ func (k *kubeProvider) getResources() (k8sopenapi.Resources, error) {
 	return k.resources, nil
 }
 
-func (k *kubeProvider) invalidateResources() {
+func (k *KubeProvider) invalidateResources() {
 	k.resourcesMutex.Lock()
 	defer k.resourcesMutex.Unlock()
 
@@ -199,23 +199,23 @@ func (k *kubeProvider) invalidateResources() {
 }
 
 // Call dynamically executes a method in the provider associated with a component resource.
-func (k *kubeProvider) Call(ctx context.Context, req *pulumirpc.CallRequest) (*pulumirpc.CallResponse, error) {
+func (k *KubeProvider) Call(ctx context.Context, req *pulumirpc.CallRequest) (*pulumirpc.CallResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "Call is not yet implemented")
 }
 
 // GetMapping fetches the mapping for this resource provider, if any. A provider should return an empty
 // response (not an error) if it doesn't have a mapping for the given key.
-func (k *kubeProvider) GetMapping(ctx context.Context, req *pulumirpc.GetMappingRequest) (*pulumirpc.GetMappingResponse, error) {
+func (k *KubeProvider) GetMapping(ctx context.Context, req *pulumirpc.GetMappingRequest) (*pulumirpc.GetMappingResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "GetMapping is not yet implemented")
 }
 
 // Construct creates a new instance of the provided component resource and returns its state.
-func (k *kubeProvider) Construct(ctx context.Context, req *pulumirpc.ConstructRequest) (*pulumirpc.ConstructResponse, error) {
+func (k *KubeProvider) Construct(ctx context.Context, req *pulumirpc.ConstructRequest) (*pulumirpc.ConstructResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "Construct is not yet implemented")
 }
 
 // GetSchema returns the JSON-encoded schema for this provider's package.
-func (k *kubeProvider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaRequest) (*pulumirpc.GetSchemaResponse, error) {
+func (k *KubeProvider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaRequest) (*pulumirpc.GetSchemaResponse, error) {
 	if v := req.GetVersion(); v != 0 {
 		return nil, fmt.Errorf("unsupported schema version %d", v)
 	}
@@ -224,7 +224,7 @@ func (k *kubeProvider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaRe
 }
 
 // CheckConfig validates the configuration for this provider.
-func (k *kubeProvider) CheckConfig(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
+func (k *KubeProvider) CheckConfig(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.CheckConfig(%s)", k.label(), urn)
 	logger.V(9).Infof("%s executing", label)
@@ -324,7 +324,7 @@ func (k *kubeProvider) CheckConfig(ctx context.Context, req *pulumirpc.CheckRequ
 }
 
 // DiffConfig diffs the configuration for this provider.
-func (k *kubeProvider) DiffConfig(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
+func (k *KubeProvider) DiffConfig(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.DiffConfig(%s)", k.label(), urn)
 	logger.V(9).Infof("%s executing", label)
@@ -413,7 +413,7 @@ func (k *kubeProvider) DiffConfig(ctx context.Context, req *pulumirpc.DiffReques
 }
 
 // Configure configures the resource provider with "globals" that control its behavior.
-func (k *kubeProvider) Configure(_ context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
+func (k *KubeProvider) Configure(_ context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
 	const trueStr = "true"
 
 	vars := req.GetVariables()
@@ -793,7 +793,7 @@ func (k *kubeProvider) Configure(_ context.Context, req *pulumirpc.ConfigureRequ
 }
 
 // Invoke dynamically executes a built-in function in the provider.
-func (k *kubeProvider) Invoke(ctx context.Context,
+func (k *KubeProvider) Invoke(ctx context.Context,
 	req *pulumirpc.InvokeRequest) (*pulumirpc.InvokeResponse, error) {
 
 	// Important: Some invoke logic is intended to run during preview, and the Kubernetes provider
@@ -902,7 +902,7 @@ func (k *kubeProvider) Invoke(ctx context.Context,
 
 // StreamInvoke dynamically executes a built-in function in the provider. The result is streamed
 // back as a series of messages.
-func (k *kubeProvider) StreamInvoke(
+func (k *KubeProvider) StreamInvoke(
 	req *pulumirpc.InvokeRequest, server pulumirpc.ResourceProvider_StreamInvokeServer) error {
 
 	// Important: Some invoke logic is intended to run during preview, and the Kubernetes provider
@@ -989,7 +989,7 @@ func (k *kubeProvider) StreamInvoke(
 			select {
 			case <-k.canceler.context.Done():
 				//
-				// `kubeProvider#Cancel` was called. Terminate the `StreamInvoke` RPC, free all
+				// `KubeProvider#Cancel` was called. Terminate the `StreamInvoke` RPC, free all
 				// resources, and exit without error.
 				//
 
@@ -1072,7 +1072,7 @@ func (k *kubeProvider) StreamInvoke(
 			select {
 			case <-k.canceler.context.Done():
 				//
-				// `kubeProvider#Cancel` was called. Terminate the `StreamInvoke` RPC, free all
+				// `KubeProvider#Cancel` was called. Terminate the `StreamInvoke` RPC, free all
 				// resources, and exit without error.
 				//
 
@@ -1171,7 +1171,7 @@ func (k *kubeProvider) StreamInvoke(
 			select {
 			case <-k.canceler.context.Done():
 				//
-				// `kubeProvider#Cancel` was called. Terminate the `StreamInvoke` RPC, free all
+				// `KubeProvider#Cancel` was called. Terminate the `StreamInvoke` RPC, free all
 				// resources, and exit without error.
 				//
 
@@ -1223,7 +1223,7 @@ func (k *kubeProvider) StreamInvoke(
 }
 
 // Attach sends the engine address to an already running plugin.
-func (k *kubeProvider) Attach(_ context.Context, req *pulumirpc.PluginAttach) (*empty.Empty, error) {
+func (k *KubeProvider) Attach(_ context.Context, req *pulumirpc.PluginAttach) (*empty.Empty, error) {
 	host, err := provider.NewHostClient(req.GetAddress())
 	if err != nil {
 		return nil, err
@@ -1238,7 +1238,7 @@ func (k *kubeProvider) Attach(_ context.Context, req *pulumirpc.PluginAttach) (*
 // representation of the properties as present in the program inputs. Though this rule is not
 // required for correctness, violations thereof can negatively impact the end-user experience, as
 // the provider inputs are using for detecting and rendering diffs.
-func (k *kubeProvider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
+func (k *KubeProvider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
 	//
 	// Behavior as of v0.12.x: We take two inputs:
 	//
@@ -1444,7 +1444,7 @@ func (k *kubeProvider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (
 
 // helmHookWarning logs a warning if a Chart contains unsupported hooks. The warning can be disabled by setting
 // the suppressHelmHookWarnings provider flag or related ENV var.
-func (k *kubeProvider) helmHookWarning(ctx context.Context, newInputs *unstructured.Unstructured, urn resource.URN) {
+func (k *KubeProvider) helmHookWarning(ctx context.Context, newInputs *unstructured.Unstructured, urn resource.URN) {
 	hasHelmHook := false
 	for key, value := range newInputs.GetAnnotations() {
 		// If annotations with a reserved internal prefix exist, ignore them.
@@ -1471,7 +1471,7 @@ func (k *kubeProvider) helmHookWarning(ctx context.Context, newInputs *unstructu
 }
 
 // Diff checks what impacts a hypothetical update will have on the resource's properties.
-func (k *kubeProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
+func (k *KubeProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
 	//
 	// Behavior as of v4.0: We take 2 inputs:
 	//
@@ -1694,7 +1694,7 @@ func (k *kubeProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*p
 // Create allocates a new instance of the provided resource and returns its unique ID.
 // (The input ID must be blank.)  If this call fails, the resource must not have been created (i.e.,
 // it is "transactional").
-func (k *kubeProvider) Create(
+func (k *KubeProvider) Create(
 	ctx context.Context, req *pulumirpc.CreateRequest,
 ) (*pulumirpc.CreateResponse, error) {
 	//
@@ -1885,7 +1885,7 @@ func (k *kubeProvider) Create(
 // Read the current live state associated with a resource.  Enough state must be included in the
 // inputs to uniquely identify the resource; this is typically just the resource ID, but may also
 // include some properties.
-func (k *kubeProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulumirpc.ReadResponse, error) {
+func (k *KubeProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulumirpc.ReadResponse, error) {
 	//
 	// Behavior as of v4.0: We take 2 inputs:
 	//
@@ -2131,7 +2131,7 @@ func (k *kubeProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*p
 // https://kubernetes.io/docs/concepts/overview/object-management-kubectl/declarative-config/#how-apply-calculates-differences-and-merges-changes
 // [3]:
 // https://kubernetes.io/docs/reference/using-api/server-side-apply
-func (k *kubeProvider) Update(
+func (k *KubeProvider) Update(
 	ctx context.Context, req *pulumirpc.UpdateRequest,
 ) (*pulumirpc.UpdateResponse, error) {
 	//
@@ -2343,7 +2343,7 @@ func (k *kubeProvider) Update(
 
 // Delete tears down an existing resource with the given ID.  If it fails, the resource is assumed
 // to still exist.
-func (k *kubeProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*pbempty.Empty, error) {
+func (k *KubeProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*pbempty.Empty, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Delete(%s)", k.label(), urn)
 	logger.V(9).Infof("%s executing", label)
@@ -2477,7 +2477,7 @@ func isListURN(urn resource.URN) bool {
 }
 
 // GetPluginInfo returns generic information about this plugin, like its version.
-func (k *kubeProvider) GetPluginInfo(context.Context, *pbempty.Empty) (*pulumirpc.PluginInfo, error) {
+func (k *KubeProvider) GetPluginInfo(context.Context, *pbempty.Empty) (*pulumirpc.PluginInfo, error) {
 	return &pulumirpc.PluginInfo{
 		Version: k.version,
 	}, nil
@@ -2488,7 +2488,7 @@ func (k *kubeProvider) GetPluginInfo(context.Context, *pbempty.Empty) (*pulumirp
 // creation error or an initialization error). Since Cancel is advisory and non-blocking, it is up
 // to the host to decide how long to wait after Cancel is called before (e.g.)
 // hard-closing any gRPC connection.
-func (k *kubeProvider) Cancel(context.Context, *pbempty.Empty) (*pbempty.Empty, error) {
+func (k *KubeProvider) Cancel(context.Context, *pbempty.Empty) (*pbempty.Empty, error) {
 	k.canceler.cancel()
 	return &pbempty.Empty{}, nil
 }
@@ -2499,11 +2499,11 @@ func (k *kubeProvider) Cancel(context.Context, *pbempty.Empty) (*pbempty.Empty, 
 
 // --------------------------------------------------------------------------
 
-func (k *kubeProvider) label() string {
+func (k *KubeProvider) label() string {
 	return fmt.Sprintf("Provider[%s]", k.name)
 }
 
-func (k *kubeProvider) gvkFromUnstructured(input *unstructured.Unstructured) schema.GroupVersionKind {
+func (k *KubeProvider) gvkFromUnstructured(input *unstructured.Unstructured) schema.GroupVersionKind {
 	var group, version, kind string
 
 	kind = input.GetKind()
@@ -2524,7 +2524,7 @@ func (k *kubeProvider) gvkFromUnstructured(input *unstructured.Unstructured) sch
 	}
 }
 
-func (k *kubeProvider) gvkFromURN(urn resource.URN) (schema.GroupVersionKind, error) {
+func (k *KubeProvider) gvkFromURN(urn resource.URN) (schema.GroupVersionKind, error) {
 	if string(urn.Type().Package()) != k.providerPackage {
 		return schema.GroupVersionKind{}, fmt.Errorf("unrecognized resource type: %q for this provider",
 			urn.Type())
@@ -2549,7 +2549,7 @@ func (k *kubeProvider) gvkFromURN(urn resource.URN) (schema.GroupVersionKind, er
 	}, nil
 }
 
-func (k *kubeProvider) readLiveObject(obj *unstructured.Unstructured) (*unstructured.Unstructured, error) {
+func (k *KubeProvider) readLiveObject(obj *unstructured.Unstructured) (*unstructured.Unstructured, error) {
 	rc, err := k.clientSet.ResourceClientForObject(obj)
 	if err != nil {
 		return nil, err
@@ -2561,7 +2561,7 @@ func (k *kubeProvider) readLiveObject(obj *unstructured.Unstructured) (*unstruct
 }
 
 // inputPatch calculates a patch on the client-side by comparing old inputs to the current inputs.
-func (k *kubeProvider) inputPatch(
+func (k *KubeProvider) inputPatch(
 	oldInputs, newInputs *unstructured.Unstructured,
 ) ([]byte, error) {
 	oldInputsJSON, err := oldInputs.MarshalJSON()
@@ -2576,7 +2576,7 @@ func (k *kubeProvider) inputPatch(
 	return jsonpatch.CreateMergePatch(oldInputsJSON, newInputsJSON)
 }
 
-func (k *kubeProvider) isDryRunDisabledError(err error) bool {
+func (k *KubeProvider) isDryRunDisabledError(err error) bool {
 	se, isStatusError := err.(*apierrors.StatusError)
 	if !isStatusError {
 		return false
@@ -2593,7 +2593,7 @@ func (k *kubeProvider) isDryRunDisabledError(err error) bool {
 // 1. Resource annotation (this will likely change to a typed option field in the next major release)
 // 2. Value from the Pulumi state
 // 3. Randomly generated name
-func (k *kubeProvider) fieldManagerName(
+func (k *KubeProvider) fieldManagerName(
 	randomSeed []byte, state resource.PropertyMap, inputs *unstructured.Unstructured,
 ) string {
 	// Always use the same fieldManager name for Client-Side Apply mode to avoid conflicts based on the name of the
@@ -2622,7 +2622,7 @@ func (k *kubeProvider) fieldManagerName(
 // gvkExists attempts to load a REST mapping for the given resource and returns true on success. Since this operation
 // will fail if the GVK has not been registered with the apiserver, it can be used to indirectly check if the resource
 // may be an unregistered CustomResource.
-func (k *kubeProvider) gvkExists(obj *unstructured.Unstructured) bool {
+func (k *KubeProvider) gvkExists(obj *unstructured.Unstructured) bool {
 	gvk := obj.GroupVersionKind()
 	if k.clusterUnreachable {
 		logger.V(3).Infof("gvkExists check failed due to unreachable cluster")
@@ -2639,7 +2639,7 @@ func (k *kubeProvider) gvkExists(obj *unstructured.Unstructured) bool {
 
 // loadPulumiConfig loads the PULUMI_CONFIG environment variable set by the engine, unmarshals the JSON string into
 // a map, and returns the map and a bool indicating if the operation succeeded.
-func (k *kubeProvider) loadPulumiConfig() (map[string]any, bool) {
+func (k *KubeProvider) loadPulumiConfig() (map[string]any, bool) {
 	configStr, ok := os.LookupEnv("PULUMI_CONFIG")
 	// PULUMI_CONFIG is not set on older versions of the engine, so check if the lookup succeeds.
 	if !ok || configStr == "" {
