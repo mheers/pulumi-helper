@@ -27,10 +27,10 @@ import (
 	"strings"
 	"time"
 
+	"dario.cat/mergo"
 	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/golang/protobuf/ptypes/empty"
 	pbempty "github.com/golang/protobuf/ptypes/empty"
-	"github.com/imdario/mergo"
 	"github.com/mitchellh/mapstructure"
 	pkgerrors "github.com/pkg/errors"
 	"github.com/pulumi/pulumi-kubernetes/provider/v4/pkg/clients"

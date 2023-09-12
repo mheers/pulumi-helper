@@ -5,8 +5,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/pulumi/pulumi/pkg/v3/secrets"
-	"github.com/pulumi/pulumi/pkg/v3/secrets/passphrase"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource/config"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -23,7 +22,7 @@ func encryptionSaltByStackName(stackName string) (string, error) {
 	return y.Encryptionsalt, nil
 }
 
-var secretsManager secrets.Manager
+var crypter config.Crypter
 
 func InitCrypterWithSaltAndPassphrase(salt, passphrase string) error {
 	if err := os.Setenv("PULUMI_CONFIG_PASSPHRASE", passphrase); err != nil {
@@ -50,7 +49,7 @@ func InitCrypterForProject(name string) error {
 
 func initCrypter(salt string) error {
 	// only initialize once
-	if secretsManager != nil {
+	if crypter != nil {
 		return nil
 	}
 
@@ -58,24 +57,17 @@ func initCrypter(salt string) error {
 	if pp == "" {
 		return errors.New("PULUMI_CONFIG_PASSPHRASE is not set")
 	}
-	sm, err := passphrase.NewPassphraseSecretsManager(pp, salt)
-	if err != nil {
-		return err
-	}
-	secretsManager = sm
+	crypter = config.NewSymmetricCrypterFromPassphrase(pp, []byte(salt))
+
 	return nil
 }
 
 func Encrypt(value string) (string, error) {
-	if secretsManager == nil {
+	if crypter == nil {
 		return "", errors.New("secretsManager is not initialized")
 	}
 
-	enc, err := secretsManager.Encrypter()
-	if err != nil {
-		return "", err
-	}
-	encrypted, err := enc.EncryptValue(context.Background(), value)
+	encrypted, err := crypter.EncryptValue(context.Background(), value)
 	if err != nil {
 		return "", err
 	}
@@ -83,15 +75,11 @@ func Encrypt(value string) (string, error) {
 }
 
 func Decrypt(value string) (string, error) {
-	if secretsManager == nil {
+	if crypter == nil {
 		return "", errors.New("secretsManager is not initialized")
 	}
 
-	dec, err := secretsManager.Decrypter()
-	if err != nil {
-		return "", err
-	}
-	decrypted, err := dec.DecryptValue(context.Background(), value)
+	decrypted, err := crypter.DecryptValue(context.Background(), value)
 	if err != nil {
 		return "", err
 	}
