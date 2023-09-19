@@ -9,7 +9,7 @@ import (
 // PublicIP returns the public ip of the caller
 func PublicIP() (string, error) {
 	// my public ip
-	resp, err := http.Get("https://icanhazip.com")
+	resp, err := http.Get("https://ipv4.icanhazip.com")
 	if err != nil {
 		return "", err
 	}
