@@ -12,10 +12,10 @@ require (
 	github.com/jedib0t/go-pretty/v6 v6.4.7
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi-kubernetes/provider/v4 v4.0.0-20230911220914-d3f02f4d91a8
-	github.com/pulumi/pulumi-kubernetes/sdk/v4 v4.1.1
-	github.com/pulumi/pulumi/pkg/v3 v3.82.0
-	github.com/pulumi/pulumi/sdk/v3 v3.82.0
+	github.com/pulumi/pulumi-kubernetes/provider/v4 v4.0.0-20230921192138-550b206af56e
+	github.com/pulumi/pulumi-kubernetes/sdk/v4 v4.2.0
+	github.com/pulumi/pulumi/pkg/v3 v3.84.0
+	github.com/pulumi/pulumi/sdk/v3 v3.84.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
@@ -60,7 +60,7 @@ require (
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/containerd/containerd v1.7.0 // indirect
-	github.com/cyphar/filepath-securejoin v0.2.3 // indirect
+	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/djherbis/times v1.5.0 // indirect
 	github.com/docker/cli v23.0.1+incompatible // indirect
