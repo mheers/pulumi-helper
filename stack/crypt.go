@@ -5,7 +5,8 @@ import (
 	"errors"
 	"os"
 
-	"github.com/pulumi/pulumi/sdk/v3/go/common/resource/config"
+	"github.com/pulumi/pulumi/pkg/v3/secrets"
+	"github.com/pulumi/pulumi/pkg/v3/secrets/passphrase"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -22,7 +23,7 @@ func encryptionSaltByStackName(stackName string) (string, error) {
 	return y.Encryptionsalt, nil
 }
 
-var crypter config.Crypter
+var secretsManager secrets.Manager
 
 func InitCrypterWithSaltAndPassphrase(salt, passphrase string) error {
 	if err := os.Setenv("PULUMI_CONFIG_PASSPHRASE", passphrase); err != nil {
@@ -49,7 +50,7 @@ func InitCrypterForProject(name string) error {
 
 func initCrypter(salt string) error {
 	// only initialize once
-	if crypter != nil {
+	if secretsManager != nil {
 		return nil
 	}
 
@@ -57,17 +58,25 @@ func initCrypter(salt string) error {
 	if pp == "" {
 		return errors.New("PULUMI_CONFIG_PASSPHRASE is not set")
 	}
-	crypter = config.NewSymmetricCrypterFromPassphrase(pp, []byte(salt))
+	var err error
+	secretsManager, err = passphrase.NewPassphraseSecretsManager(pp, salt)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func Encrypt(value string) (string, error) {
-	if crypter == nil {
+	if secretsManager == nil {
 		return "", errors.New("secretsManager is not initialized")
 	}
 
-	encrypted, err := crypter.EncryptValue(context.Background(), value)
+	enc, err := secretsManager.Encrypter()
+	if err != nil {
+		return "", err
+	}
+	encrypted, err := enc.EncryptValue(context.Background(), value)
 	if err != nil {
 		return "", err
 	}
@@ -75,11 +84,15 @@ func Encrypt(value string) (string, error) {
 }
 
 func Decrypt(value string) (string, error) {
-	if crypter == nil {
+	if secretsManager == nil {
 		return "", errors.New("secretsManager is not initialized")
 	}
 
-	decrypted, err := crypter.DecryptValue(context.Background(), value)
+	dec, err := secretsManager.Decrypter()
+	if err != nil {
+		return "", err
+	}
+	decrypted, err := dec.DecryptValue(context.Background(), value)
 	if err != nil {
 		return "", err
 	}

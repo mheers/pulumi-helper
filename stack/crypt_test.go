@@ -23,9 +23,20 @@ func TestDecrypt(t *testing.T) {
 	err := initCrypter(salt)
 	require.NoError(t, err)
 
-	decrypted, err := Decrypt("v1:Ky78R73VoVfLZJGO:SwA6D9gcd8RN64zOjpyJsx2K5g8=")
+	decrypted, err := Decrypt("v1:fYYADOWNT7IqCV0V:DrMqOwJhAMQPuc6GssWyi7ggM9Y=")
 	require.NoError(t, err)
 	require.Equal(t, "test", decrypted)
+}
+
+func TestDecryptOld(t *testing.T) {
+	os.Setenv("PULUMI_CONFIG_PASSPHRASE", "foo")
+	salt := "v1:kHqNYXEuUOY=:v1:iV9u6JT0OpQFvpqQ:yXm3mSW5jO5t+uLigEmEbpXsflDxMQ=="
+	err := initCrypter(salt)
+	require.NoError(t, err)
+
+	decrypted, err := Decrypt("v1:D8D7cmOhI3pMhAG5:UOW+JAdt1vX/GrJSQoiwWXMGEgacCCGCuzgbe2vvYw==")
+	require.NoError(t, err)
+	require.Equal(t, "jr7$sZS!vfPuJlM", decrypted)
 }
 
 func TestEncryptDecrypt(t *testing.T) {
