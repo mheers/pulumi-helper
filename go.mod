@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	dario.cat/mergo v1.0.0
+	github.com/aws/smithy-go v1.13.5
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be
 	github.com/evanphx/json-patch v5.6.0+incompatible
 	github.com/ghodss/yaml v1.0.0

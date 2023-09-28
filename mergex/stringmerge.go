@@ -46,7 +46,7 @@ func (sma StringMergeArray) Merge() StringMergeArray {
 			}
 			handledKeys[key] = true
 
-			values := values(sm, key)
+			values := valuesS(sm, key)
 
 			result = append(result, StringMerge{
 				Key:    pulumix.MustConvertTyped[*string](pulumi.String(key).ToStringPtrOutput()),
@@ -60,7 +60,7 @@ func (sma StringMergeArray) Merge() StringMergeArray {
 	return result
 }
 
-func values(sm pulumi.MapArray, key string) []string {
+func valuesS(sm pulumi.MapArray, key string) []string {
 	values := []string{}
 	wg := sync.WaitGroup{}
 	wg.Add(1)
