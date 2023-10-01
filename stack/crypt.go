@@ -59,7 +59,7 @@ func initCrypter(salt string) error {
 		return errors.New("PULUMI_CONFIG_PASSPHRASE is not set")
 	}
 	var err error
-	secretsManager, err = passphrase.NewPassphraseSecretsManager(pp, salt)
+	secretsManager, err = passphrase.GetPassphraseSecretsManager(pp, salt)
 	if err != nil {
 		return err
 	}
