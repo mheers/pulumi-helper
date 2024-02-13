@@ -670,11 +670,6 @@ func (k *KubeProvider) Configure(_ context.Context, req *pulumirpc.ConfigureRequ
 			return nil, err
 		}
 		k.clientSet = cs
-		lc, err := clients.NewLogClient(k.canceler.context, k.config)
-		if err != nil {
-			return nil, err
-		}
-		k.logClient = lc
 
 		k.k8sVersion = cluster.TryGetServerVersion(cs.DiscoveryClientCached)
 
@@ -1221,7 +1216,7 @@ func (k *KubeProvider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (
 		// NOTE: If old inputs exist, they have a name, either provided by the user or filled in with a
 		// previous run of `Check`.
 		contract.Assertf(oldInputs.GetName() != "", "expected object name to be nonempty: %v", oldInputs)
-		metadata.AdoptOldAutonameIfUnnamed(newInputs, oldInputs)
+		metadata.AdoptOldAutonameIfUnnamed(newInputs, oldInputs, nil)
 
 		// If the resource has existing state, we only set the "managed-by: pulumi" label if it is already present. This
 		// avoids causing diffs for cases where the resource is being imported, or was created using SSA. The goal in

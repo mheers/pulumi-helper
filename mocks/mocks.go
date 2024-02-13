@@ -17,7 +17,7 @@ func (Mocks) NewResource(args pulumi.MockResourceArgs) (string, resource.Propert
 
 func (Mocks) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error) {
 	if args.Token == "kubernetes:helm:template" {
-		kp, err := provider.MakeKubeProvider(nil, "test", "v1.25", []byte{})
+		kp, err := provider.MakeKubeProvider(nil, "test", "v1.28", []byte{})
 		if err != nil {
 			return nil, err
 		}
