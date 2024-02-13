@@ -33,7 +33,7 @@ func IngressIP(chart *helmv3.Chart, fqn, namespace string) pulumix.Output[string
 
 		lbiao := ingress.ToIngressLoadBalancerIngressArrayOutput()
 
-		ip := pulumix.ApplyErr(lbiao, func(vs []networkingv1.IngressLoadBalancerIngress) (string, error) {
+		ip := lbiao.ApplyT(func(vs []networkingv1.IngressLoadBalancerIngress) (string, error) {
 			index := 0
 			if len(vs) <= index {
 				return "", fmt.Errorf("index out of range")
@@ -41,7 +41,7 @@ func IngressIP(chart *helmv3.Chart, fqn, namespace string) pulumix.Output[string
 			return *vs[index].Ip, nil
 		})
 
-		return ip, nil
+		return pulumix.Output[string](pulumix.MustConvertTyped[string](ip)), nil
 	})
 
 	fIP := pulumix.Flatten[string](frontendIP)
