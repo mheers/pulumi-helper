@@ -3,11 +3,20 @@ package random
 import (
 	"math/rand"
 	"strings"
-	"time"
 )
 
 // Password creates a random password
 func Password(minLength, maxLength int) string {
+	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+		"abcdefghijklmnopqrstuvwxyz" +
+		"0123456789" +
+		"!%&()=?")
+
+	return PasswordFromChars(minLength, maxLength, chars)
+}
+
+// Password creates a random password
+func PasswordFromChars(minLength, maxLength int, chars []rune) string {
 	if maxLength < minLength {
 		maxLength = minLength
 	}
@@ -18,12 +27,6 @@ func Password(minLength, maxLength int) string {
 		minLength = 8
 	}
 
-	// Seed the random number generator
-	rand.Seed(time.Now().UnixNano())
-	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-		"abcdefghijklmnopqrstuvwxyz" +
-		"0123456789" +
-		"!$%&()=?")
 	var b strings.Builder
 	for i := 0; i < maxLength; i++ {
 		b.WriteRune(chars[rand.Intn(len(chars))])
@@ -50,7 +53,6 @@ func Number(min, max int) int {
 	if min == 0 {
 		min = 1
 	}
-	rand.Seed(time.Now().UnixNano())
 
 	r := rand.Intn(max)
 
@@ -63,6 +65,5 @@ func Number(min, max int) int {
 
 // Bool creates a random boolean
 func Bool() bool {
-	rand.Seed(time.Now().UnixNano())
 	return rand.Intn(2) == 1
 }
