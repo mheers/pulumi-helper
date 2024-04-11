@@ -39,6 +39,7 @@ func (Mocks) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error) {
 
 		text, err := k8sProvider.HelmTemplate(opts)
 		if err != nil {
+			// TODO: in unit tests this error is not seen / caught
 			return nil, pkgerrors.Wrap(err, "failed to generate YAML for specified Helm chart")
 		}
 
