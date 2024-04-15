@@ -14,7 +14,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/pulumi/pulumi-kubernetes/provider/v4 v4.0.0-20240329160250-78ab38748b91
-	github.com/pulumi/pulumi-kubernetes/sdk/v4 v4.9.1-0.20240329160250-78ab38748b91
+	github.com/pulumi/pulumi-kubernetes/sdk/v4 v4.10.0
 	github.com/pulumi/pulumi/pkg/v3 v3.112.0
 	github.com/pulumi/pulumi/sdk/v3 v3.112.0
 	github.com/sirupsen/logrus v1.9.3
