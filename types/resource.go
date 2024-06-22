@@ -28,3 +28,11 @@ func MergeResourceArrayOutputs(resourceArrayOutputs []pulumi.ResourceArrayOutput
 		return pulumi.ToResourceArray(arr).ToResourceArrayOutput()
 	}).(pulumi.ResourceArrayOutput)
 }
+
+func ResourceMapToSlice(resourceMap map[string]pulumi.Resource) []pulumi.Resource {
+	var resources []pulumi.Resource
+	for _, resource := range resourceMap {
+		resources = append(resources, resource)
+	}
+	return resources
+}
