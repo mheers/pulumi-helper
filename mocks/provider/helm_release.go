@@ -887,10 +887,6 @@ func (r *helmReleaseProvider) Read(ctx context.Context, req *pulumirpc.ReadReque
 		return nil, err
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
 	existingRelease, err := decodeRelease(oldState, fmt.Sprintf("%s.olds", label))
 	if err != nil {
 		return nil, err
