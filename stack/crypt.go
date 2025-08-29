@@ -72,10 +72,7 @@ func Encrypt(value string) (string, error) {
 		return "", errors.New("secretsManager is not initialized")
 	}
 
-	enc, err := secretsManager.Encrypter()
-	if err != nil {
-		return "", err
-	}
+	enc := secretsManager.Encrypter()
 	encrypted, err := enc.EncryptValue(context.Background(), value)
 	if err != nil {
 		return "", err
@@ -88,10 +85,7 @@ func Decrypt(value string) (string, error) {
 		return "", errors.New("secretsManager is not initialized")
 	}
 
-	dec, err := secretsManager.Decrypter()
-	if err != nil {
-		return "", err
-	}
+	dec := secretsManager.Decrypter()
 	decrypted, err := dec.DecryptValue(context.Background(), value)
 	if err != nil {
 		return "", err
